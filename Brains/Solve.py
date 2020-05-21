@@ -21,14 +21,6 @@ D_center = 49
 Kociemba_U_center = 'y'
 Kociemba_L_center = 'b'
 
-Uonly = 'yyyyyyyyy' + 'ooobbbbbb' + 'bbbrrrrrr' + 'rrrgggggg' + 'gggoooooo' + 'wwwwwwwww' # This configuration of centers is necessary for kociemba
-solve = utils.solve(Uonly, 'Kociemba')
-print(solve)
-
-UonlyRotated = 'yyyyyyyyy' + 'gggoooooo' + 'ooobbbbbb' + 'bbbrrrrrr' + 'rrrgggggg' + 'wwwwwwwww'
-# solve = utils.solve(UonlyRotated, 'Kociemba')
-# print(solve)
-
 # Rotate a cube configuration about the vertical (Y) axis, keeping U and D faces fixed
 def YRotate(cube):
 	cubeArr = [c for c in cube]
@@ -40,8 +32,6 @@ def YRotate(cube):
 	cubeArr[45:53] = [oldCubeArr[i] for i in image45to53]
 	return ''.join(cubeArr)
 
-print(YRotate(YRotate(YRotate(UonlyRotated))))
-
 # Rotate a cube configuration about the horizontal (X) axis, keeping L and R faces fixed
 def XRotate(cube):
 	cubeArr = [c for c in cube]
@@ -49,7 +39,7 @@ def XRotate(cube):
 	cubeArr[36:45] = [oldCubeArr[i] for i in range(8, -1, -1)]
 	cubeArr[0:9] = [oldCubeArr[i] for i in range(18, 27)]
 	cubeArr[18:27] = [oldCubeArr[i] for i in range(45, 54)]
-	cubeArr[45:54] = [oldCubeArr[i] for i in range(44, 34, -1)]
+	cubeArr[45:54] = [oldCubeArr[i] for i in range(44, 35, -1)]
 	image9to17 = [11, 14, 17, 10, 13, 16, 9, 12, 15]
 	cubeArr[9:18] = [oldCubeArr[i] for i in image9to17]
 	image27to35 = [33, 30, 27, 34, 31, 28, 35, 32, 29]
@@ -57,15 +47,38 @@ def XRotate(cube):
 	return ''.join(cubeArr)
 
 def orient(cube):
-	if cube[U_center] == Kociemba_U_center:
-		while cube[L_center] != Kociemba_L_center:
-			cube = YRotate(cube)
-		return cube
-	elif cube[L_center] == Kociemba_L_center:
-		while cube[U_center] != Kociemba_U_center:
-			cube = XRotate(cube)
-		return cube
-	else:
-		while not Kociemba_U_center in [cube[U_center], cube[F_center], cube[B_center], cube[D_center]]:
-			cube = YRotate(cube)
-		while Kociemba_U_center != cube[U_center]:
+	rotations = []
+	if Kociemba_U_center in [cube[L_center], cube[R_center]]:
+		cube = YRotate(cube)
+		rotations.append('Y')
+	while Kociemba_U_center != cube[U_center]:
+		cube = XRotate(cube)
+		rotations.append('X')
+	while cube[L_center] != Kociemba_L_center:
+		cube = YRotate(cube)
+		rotations.append('Y')
+	return cube, rotations
+
+def reorientTurn(turn, rotations):
+	YPrimeImage = {'U':'U', 'L':'B', 'F':'L', 'R':'F', 'B':'R', 'D':'D'}
+	XPrimeImage = {'U':'F', 'L':'L', 'F':'D', 'R':'R', 'B':'U', 'D':'B'}
+	face = turn[0]
+	for r in reversed(rotations):
+		if r == 'X':
+			face = XPrimeImage[face]
+		elif r == 'Y':
+			face = YPrimeImage[face]
+	return face + (turn[1:] if len(turn) > 1 else '')
+
+def solveAnyOrientation(cube):
+	orientedCube, rotations = orient(cube)
+	solution = utils.solve(orientedCube, 'Kociemba')
+	solutionStrings = [str(m) for m in solution]
+	solutionReoriented = [reorientTurn(turn, rotations) for turn in solutionStrings]
+	return solutionReoriented
+
+someCube = 'orywgggyb' + 'yowbwoyyw' + 'ogwgoboyy' + 'rrbwygorr' + 'rbbwrygor' + 'brgobwgbw'
+someSolution = solveAnyOrientation(someCube)
+
+for s in someSolution:
+	print(s, end=', ')
