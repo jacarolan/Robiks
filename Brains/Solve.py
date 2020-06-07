@@ -70,9 +70,9 @@ def reorientTurn(turn, rotations):
 			face = YPrimeImage[face]
 	return face + (turn[1:] if len(turn) > 1 else '')
 
-def solveAnyOrientation(cube):
+def solveAnyOrientation(cube, method='Kociemba'):
 	orientedCube, rotations = orient(cube)
-	solution = utils.solve(orientedCube, 'Kociemba')
+	solution = utils.solve(orientedCube, method)
 	solutionStrings = [str(m) for m in solution]
 	solutionReoriented = [reorientTurn(turn, rotations) for turn in solutionStrings]
 	return solutionReoriented
